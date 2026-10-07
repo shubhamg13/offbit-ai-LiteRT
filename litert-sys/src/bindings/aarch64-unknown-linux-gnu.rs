@@ -158,6 +158,13 @@ pub type LiteRtCompiledModel = *mut LiteRtCompiledModelT;
 pub type LiteRtCompiledModelConst = *const LiteRtCompiledModelT;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
+pub struct LiteRtJitExecutableT {
+    _unused: [u8; 0],
+}
+pub type LiteRtJitExecutable = *mut LiteRtJitExecutableT;
+pub type LiteRtJitExecutableConst = *const LiteRtJitExecutableT;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
 pub struct LiteRtEnvironmentT {
     _unused: [u8; 0],
 }
@@ -341,10 +348,12 @@ pub const kLiteRtHwAcceleratorNone: LiteRtHwAccelerators = 0;
 pub const kLiteRtHwAcceleratorCpu: LiteRtHwAccelerators = 1;
 pub const kLiteRtHwAcceleratorGpu: LiteRtHwAccelerators = 2;
 pub const kLiteRtHwAcceleratorNpu: LiteRtHwAccelerators = 4;
+pub const _kLiteRtHwAcceleratorNegativeDummy: LiteRtHwAccelerators = -1;
 pub type LiteRtHwAccelerators = ::std::os::raw::c_int;
 pub const kLiteRtDelegatePrecisionDefault: LiteRtDelegatePrecision = 0;
 pub const kLiteRtDelegatePrecisionFp16: LiteRtDelegatePrecision = 1;
 pub const kLiteRtDelegatePrecisionFp32: LiteRtDelegatePrecision = 2;
+pub const kLiteRtDelegatePrecisionFp16WithFp32Accum: LiteRtDelegatePrecision = 3;
 pub type LiteRtDelegatePrecision = ::std::os::raw::c_uint;
 pub const kLiteRtGpuPriorityDefault: LiteRtGpuPriority = 0;
 pub const kLiteRtGpuPriorityLow: LiteRtGpuPriority = 1;
@@ -438,20 +447,20 @@ impl LiteRtLayout {
         }
     }
     #[inline]
-    pub fn has_strides(&self) -> bool {
-        unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u8) }
+    pub fn has_strides(&self) -> ::std::os::raw::c_uint {
+        unsafe { ::std::mem::transmute(self._bitfield_1.get(7usize, 1u8) as u32) }
     }
     #[inline]
-    pub fn set_has_strides(&mut self, val: bool) {
+    pub fn set_has_strides(&mut self, val: ::std::os::raw::c_uint) {
         unsafe {
-            let val: u8 = ::std::mem::transmute(val);
+            let val: u32 = ::std::mem::transmute(val);
             self._bitfield_1.set(7usize, 1u8, val as u64)
         }
     }
     #[inline]
     pub fn new_bitfield_1(
         rank: ::std::os::raw::c_uint,
-        has_strides: bool,
+        has_strides: ::std::os::raw::c_uint,
     ) -> __BindgenBitfieldUnit<[u8; 1usize]> {
         let mut __bindgen_bitfield_unit: __BindgenBitfieldUnit<[u8; 1usize]> = Default::default();
         __bindgen_bitfield_unit.set(0usize, 7u8, {
@@ -459,7 +468,7 @@ impl LiteRtLayout {
             rank as u64
         });
         __bindgen_bitfield_unit.set(7usize, 1u8, {
-            let has_strides: u8 = unsafe { ::std::mem::transmute(has_strides) };
+            let has_strides: u32 = unsafe { ::std::mem::transmute(has_strides) };
             has_strides as u64
         });
         __bindgen_bitfield_unit
@@ -478,15 +487,6 @@ extern "C" {
         result: *mut bool,
     ) -> LiteRtStatus;
 }
-extern "C" {
-    pub fn LiteRtGetTensorName(
-        tensor: LiteRtTensor,
-        name: *mut *const ::std::os::raw::c_char,
-    ) -> LiteRtStatus;
-}
-extern "C" {
-    pub fn LiteRtGetTensorIndex(tensor: LiteRtTensor, tensor_index: *mut u32) -> LiteRtStatus;
-}
 pub const kLiteRtElementTypeNone: LiteRtElementType = 0;
 pub const kLiteRtElementTypeBool: LiteRtElementType = 6;
 pub const kLiteRtElementTypeInt2: LiteRtElementType = 20;
@@ -495,10 +495,13 @@ pub const kLiteRtElementTypeInt8: LiteRtElementType = 9;
 pub const kLiteRtElementTypeInt16: LiteRtElementType = 7;
 pub const kLiteRtElementTypeInt32: LiteRtElementType = 2;
 pub const kLiteRtElementTypeInt64: LiteRtElementType = 4;
+pub const kLiteRtElementTypeUInt4: LiteRtElementType = 21;
 pub const kLiteRtElementTypeUInt8: LiteRtElementType = 3;
 pub const kLiteRtElementTypeUInt16: LiteRtElementType = 17;
 pub const kLiteRtElementTypeUInt32: LiteRtElementType = 16;
 pub const kLiteRtElementTypeUInt64: LiteRtElementType = 13;
+pub const kLiteRtElementTypeFloat8E4M3FN: LiteRtElementType = 22;
+pub const kLiteRtElementTypeFloat8E5M2: LiteRtElementType = 23;
 pub const kLiteRtElementTypeFloat16: LiteRtElementType = 10;
 pub const kLiteRtElementTypeBFloat16: LiteRtElementType = 19;
 pub const kLiteRtElementTypeFloat32: LiteRtElementType = 1;
@@ -543,12 +546,14 @@ impl Default for LiteRtRankedTensorType {
 pub const kLiteRtRankedTensorType: LiteRtTensorTypeId = 0;
 pub const kLiteRtUnrankedTensorType: LiteRtTensorTypeId = 1;
 pub type LiteRtTensorTypeId = ::std::os::raw::c_uint;
+#[doc = "\n @note This concrete type is part of the public API and is ABI stable."]
 #[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct LiteRtQuantizationPerTensor {
     pub scale: f32,
     pub zero_point: i64,
 }
+#[doc = "\n @note This concrete type is part of the public API and is ABI stable."]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct LiteRtQuantizationPerChannel {
@@ -566,10 +571,28 @@ impl Default for LiteRtQuantizationPerChannel {
         }
     }
 }
+#[doc = "\n @note This concrete type is part of the public API and is ABI stable."]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct LiteRtQuantizationBlockWise {
+    pub scales: LiteRtTensor,
+    pub zero_points: LiteRtTensor,
+    pub block_size: i32,
+}
+impl Default for LiteRtQuantizationBlockWise {
+    fn default() -> Self {
+        let mut s = ::std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::std::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
 pub const kLiteRtQuantizationNone: LiteRtQuantizationTypeId = 0;
 pub const kLiteRtQuantizationPerTensor: LiteRtQuantizationTypeId = 1;
 pub const kLiteRtQuantizationPerChannel: LiteRtQuantizationTypeId = 2;
 pub const kLiteRtQuantizationBlockWise: LiteRtQuantizationTypeId = 3;
+#[doc = "\n @note This concrete type is part of the public API and is ABI stable."]
 pub type LiteRtQuantizationTypeId = ::std::os::raw::c_uint;
 extern "C" {
     pub fn LiteRtGetQuantizationTypeId(
@@ -587,6 +610,12 @@ extern "C" {
     pub fn LiteRtGetPerChannelQuantization(
         tensor: LiteRtTensor,
         per_channel_quantization: *mut LiteRtQuantizationPerChannel,
+    ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtGetBlockWiseQuantization(
+        tensor: LiteRtTensor,
+        block_wise_quantization: *mut LiteRtQuantizationBlockWise,
     ) -> LiteRtStatus;
 }
 #[repr(C)]
@@ -694,58 +723,6 @@ pub type LiteRtTensorBufferType = ::std::os::raw::c_uint;
 pub type LiteRtGpuDeviceId = *mut ::std::os::raw::c_void;
 pub type LiteRtGpuQueueId = *mut ::std::os::raw::c_void;
 pub type HwMemoryHandle = *mut ::std::os::raw::c_void;
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct HwMemoryInfo {
-    pub memory_handle: HwMemoryHandle,
-    pub raw_handle: *mut ::std::os::raw::c_void,
-}
-impl Default for HwMemoryInfo {
-    fn default() -> Self {
-        let mut s = ::std::mem::MaybeUninit::<Self>::uninit();
-        unsafe {
-            ::std::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
-            s.assume_init()
-        }
-    }
-}
-pub type HwMemoryInfoPtr = *mut HwMemoryInfo;
-pub type CreateCustomTensorBuffer = ::std::option::Option<
-    unsafe extern "C" fn(
-        device_id: LiteRtGpuDeviceId,
-        queue_id: LiteRtGpuQueueId,
-        tensor_type: *const LiteRtRankedTensorType,
-        buffer_type: LiteRtTensorBufferType,
-        bytes: usize,
-        packed_bytes: usize,
-        hw_memory_info: *mut HwMemoryInfoPtr,
-    ) -> LiteRtStatus,
->;
-pub type ImportCustomTensorBuffer = ::std::option::Option<
-    unsafe extern "C" fn(
-        device_id: LiteRtGpuDeviceId,
-        queue_id: LiteRtGpuQueueId,
-        tensor_type: *const LiteRtRankedTensorType,
-        buffer_type: LiteRtTensorBufferType,
-        hw_buffer_handle: HwMemoryHandle,
-        bytes: usize,
-        packed_bytes: usize,
-        hw_memory_info: *mut HwMemoryInfoPtr,
-    ) -> LiteRtStatus,
->;
-pub type DestroyCustomTensorBuffer =
-    ::std::option::Option<unsafe extern "C" fn(hw_memory_info: HwMemoryInfoPtr) -> LiteRtStatus>;
-pub type LockCustomTensorBuffer = ::std::option::Option<
-    unsafe extern "C" fn(
-        hw_memory_info: HwMemoryInfoPtr,
-        mode: LiteRtTensorBufferLockMode,
-        host_memory_ptr: *mut *mut ::std::os::raw::c_void,
-    ) -> LiteRtStatus,
->;
-pub type UnlockCustomTensorBuffer =
-    ::std::option::Option<unsafe extern "C" fn(hw_memory_info: HwMemoryInfoPtr) -> LiteRtStatus>;
-pub type ClearCustomTensorBuffer =
-    ::std::option::Option<unsafe extern "C" fn(hw_memory_info: HwMemoryInfoPtr) -> LiteRtStatus>;
 pub const kLiteRtEnvOptionTagCompilerPluginLibraryDir: LiteRtEnvOptionTag = 0;
 pub const kLiteRtEnvOptionTagDispatchLibraryDir: LiteRtEnvOptionTag = 1;
 pub const kLiteRtEnvOptionTagOpenClDeviceId: LiteRtEnvOptionTag = 2;
@@ -775,6 +752,14 @@ pub const kLiteRtEnvOptionTagAutoRegisterAccelerators: LiteRtEnvOptionTag = 24;
 #[doc = " \\internal This is for internal use only, for a custom runtime."]
 pub const kLiteRtEnvOptionTagMinLoggerSeverity: LiteRtEnvOptionTag = 25;
 #[doc = " \\internal This is for internal use only, for a custom runtime."]
+pub const kLiteRtEnvOptionTagCompilerCacheMaxConfigsPerModel: LiteRtEnvOptionTag = 26;
+#[doc = " \\internal This is for internal use only, for a custom runtime."]
+pub const kLiteRtEnvOptionTagCompilerCacheMaxTotalSize: LiteRtEnvOptionTag = 27;
+#[doc = " \\internal This is for internal use only. Reserved for use by LiteRT in\n Play services."]
+pub const kLiteRtEnvOptionTagContext: LiteRtEnvOptionTag = 28;
+#[doc = " \\internal This is for internal use only. Reserved for use by LiteRT in\n Play services."]
+pub const kLiteRtEnvOptionTagWebGpuFlushCallback: LiteRtEnvOptionTag = 29;
+#[doc = " \\internal This is for internal use only. Reserved for use by LiteRT in\n Play services."]
 pub const kLiteRtEnvOptionTagNull: LiteRtEnvOptionTag = 255;
 pub type LiteRtEnvOptionTag = ::std::os::raw::c_uint;
 #[doc = " An object that holds option data for the LiteRtEnvironment.\n\n @note This concrete type is part of the public API and is ABI stable."]
@@ -855,27 +840,11 @@ impl Default for LiteRtMagicNumberVerifications {
         }
     }
 }
-#[repr(C)]
-#[derive(Debug, Default, Copy, Clone)]
-pub struct LiteRtCustomTensorBufferHandlers {
-    pub create_func: CreateCustomTensorBuffer,
-    pub destroy_func: DestroyCustomTensorBuffer,
-    pub lock_func: LockCustomTensorBuffer,
-    pub unlock_func: UnlockCustomTensorBuffer,
-    pub clear_func: ClearCustomTensorBuffer,
-    pub import_func: ImportCustomTensorBuffer,
-}
 extern "C" {
     pub fn LiteRtGetEnvironmentOptionsValue(
         options: LiteRtEnvironmentOptions,
         tag: LiteRtEnvOptionTag,
         value: *mut LiteRtAny,
-    ) -> LiteRtStatus;
-}
-extern "C" {
-    pub fn LiteRtSetEnvironmentOptionsValue(
-        options: LiteRtEnvironmentOptions,
-        env_option: LiteRtEnvOption,
     ) -> LiteRtStatus;
 }
 extern "C" {
@@ -923,6 +892,12 @@ extern "C" {
 }
 extern "C" {
     pub fn LiteRtEnvironmentSupportsAhwbGlInterop(
+        environment: LiteRtEnvironment,
+        is_supported: *mut bool,
+    ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtEnvironmentSupportsFP16(
         environment: LiteRtEnvironment,
         is_supported: *mut bool,
     ) -> LiteRtStatus;
@@ -1277,6 +1252,22 @@ pub const kLiteRtOpCodeShloRngBitGenerator: LiteRtOpCode = 204;
 pub const kLiteRtOpCodeTflReduceWindow: LiteRtOpCode = 205;
 pub const kLiteRtOpCodeShloComposite: LiteRtOpCode = 206;
 pub type LiteRtOpCode = ::std::os::raw::c_uint;
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct LiteRtAllocationT {
+    _unused: [u8; 0],
+}
+pub type LiteRtAllocation = *mut LiteRtAllocationT;
+pub type LiteRtAllocationConst = *const LiteRtAllocationT;
+extern "C" {
+    pub fn LiteRtGetTensorName(
+        tensor: LiteRtTensor,
+        name: *mut *const ::std::os::raw::c_char,
+    ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtGetTensorIndex(tensor: LiteRtTensor, tensor_index: *mut u32) -> LiteRtStatus;
+}
 extern "C" {
     pub fn LiteRtGetTensorTypeId(
         tensor: LiteRtTensor,
@@ -1342,6 +1333,13 @@ extern "C" {
     ) -> LiteRtStatus;
 }
 extern "C" {
+    pub fn LiteRtGetCustomOptions(
+        op: LiteRtOp,
+        custom_options: *mut *const u8,
+        size: *mut i32,
+    ) -> LiteRtStatus;
+}
+extern "C" {
     pub fn LiteRtGetNumOpInputs(op: LiteRtOp, num_inputs: *mut LiteRtParamIndex) -> LiteRtStatus;
 }
 extern "C" {
@@ -1359,6 +1357,12 @@ extern "C" {
         op: LiteRtOp,
         output_index: LiteRtParamIndex,
         output: *mut LiteRtTensor,
+    ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtGetSubgraphName(
+        subgraph: LiteRtSubgraph,
+        name: *mut *const ::std::os::raw::c_char,
     ) -> LiteRtStatus;
 }
 extern "C" {
@@ -1468,14 +1472,25 @@ extern "C" {
 }
 extern "C" {
     pub fn LiteRtCreateModelFromFile(
+        environment: LiteRtEnvironment,
         filename: *const ::std::os::raw::c_char,
         model: *mut LiteRtModel,
     ) -> LiteRtStatus;
 }
 extern "C" {
     pub fn LiteRtCreateModelFromBuffer(
+        environment: LiteRtEnvironment,
         buffer_addr: *const ::std::os::raw::c_void,
         buffer_size: usize,
+        model: *mut LiteRtModel,
+    ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtCreateModelFromFd(
+        environment: LiteRtEnvironment,
+        fd: ::std::os::raw::c_int,
+        offset: usize,
+        size: usize,
         model: *mut LiteRtModel,
     ) -> LiteRtStatus;
 }
@@ -1557,6 +1572,13 @@ extern "C" {
         offset: *mut usize,
         destroy_model: bool,
         options: LiteRtModelSerializationOptions,
+    ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtCreateModelFromAllocation(
+        environment: LiteRtEnvironment,
+        allocation: LiteRtAllocation,
+        model: *mut LiteRtModel,
     ) -> LiteRtStatus;
 }
 extern "C" {
@@ -1820,6 +1842,9 @@ extern "C" {
     ) -> LiteRtStatus;
 }
 extern "C" {
+    pub fn LiteRtGetOneHotAxisOption(op: LiteRtOp, axis: *mut i32) -> LiteRtStatus;
+}
+extern "C" {
     pub fn LiteRtGetUnpackAxisOption(op: LiteRtOp, axis: *mut i32) -> LiteRtStatus;
 }
 extern "C" {
@@ -1866,6 +1891,9 @@ extern "C" {
         op: LiteRtOp,
         num_splits: *mut i32,
     ) -> LiteRtStatus;
+}
+extern "C" {
+    pub fn LiteRtGetSplitVNumSplitsOption(op: LiteRtOp, num_splits: *mut i32) -> LiteRtStatus;
 }
 extern "C" {
     pub fn LiteRtGetSHLOCompositeOpName(
@@ -3032,6 +3060,7 @@ pub const kLiteRtCompilerOptionsPartitionStrategyDefault: LiteRtCompilerOptionsP
 pub const kLiteRtCompilerOptionsPartitionStrategyWeaklyConnected:
     LiteRtCompilerOptionsPartitionStrategy = 1;
 pub type LiteRtCompilerOptionsPartitionStrategy = ::std::os::raw::c_uint;
+pub const kLiteRtCpuKernelModeDelegate: LiteRtCpuKernelMode = 0;
 pub const kLiteRtCpuKernelModeXnnpack: LiteRtCpuKernelMode = 0;
 pub const kLiteRtCpuKernelModeReference: LiteRtCpuKernelMode = 1;
 pub const kLiteRtCpuKernelModeBuiltin: LiteRtCpuKernelMode = 2;
@@ -3087,13 +3116,14 @@ extern "C" {
 extern "C" {
     pub fn LiteRtDestroyMetrics(metrics: LiteRtMetrics);
 }
-pub const kLiteRtLogSeverityDebug: LiteRtLogSeverity = -1;
-pub const kLiteRtLogSeverityVerbose: LiteRtLogSeverity = 0;
-pub const kLiteRtLogSeverityInfo: LiteRtLogSeverity = 1;
-pub const kLiteRtLogSeverityWarning: LiteRtLogSeverity = 2;
-pub const kLiteRtLogSeverityError: LiteRtLogSeverity = 3;
-pub const kLiteRtLogSeveritySilent: LiteRtLogSeverity = 4;
 pub type LiteRtLogSeverity = i8;
+pub const kLiteRtLogSeverityDebug: _bindgen_ty_2 = -1;
+pub const kLiteRtLogSeverityVerbose: _bindgen_ty_2 = 0;
+pub const kLiteRtLogSeverityInfo: _bindgen_ty_2 = 1;
+pub const kLiteRtLogSeverityWarning: _bindgen_ty_2 = 2;
+pub const kLiteRtLogSeverityError: _bindgen_ty_2 = 3;
+pub const kLiteRtLogSeveritySilent: _bindgen_ty_2 = 4;
+pub type _bindgen_ty_2 = ::std::os::raw::c_int;
 extern "C" {
     pub fn LiteRtGetLogSeverityName(severity: LiteRtLogSeverity) -> *const ::std::os::raw::c_char;
 }

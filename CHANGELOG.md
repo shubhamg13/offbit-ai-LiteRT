@@ -6,6 +6,36 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- **LiteRT 2.2.0** — vendored C API headers (`third_party/litert-v2.2.0/`),
+  all eight pre-generated binding files, and the Android AAR pin move from
+  LiteRT 2.1.4 to 2.2.0. Model creation now takes a `LiteRtEnvironment`
+  (`LiteRtCreateModelFrom{File,Buffer,Fd}`).
+- **Desktop prebuilts** — litert-lm pin `v0.10.2` → `v0.17.0`. The v0.17.0
+  accelerator and sampler libraries hard-link `libwebgpu_dawn`, so it is now
+  pinned and downloaded alongside them on every desktop target.
+
+### Breaking
+
+- **`litert`** — `Model::from_file` / `Model::from_bytes` take `&Environment`
+  and keep a clone of it alive for the model's lifetime (LiteRT requires the
+  environment to outlive models created from it). `Environment` is now
+  `Arc`-backed and `Clone`.
+- **`litert`** — two follow-on 2.2.0 header changes: `LiteRtLogSeverity` is a
+  plain `int8_t` typedef (the severity constants need narrowing), and
+  `has_strides` is an `unsigned int : 1` bit-field (its setter takes an
+  integer, not a `bool`).
+
+### Known issue
+
+- **WASM is still on 2.1.4** — there is no `wasm-prebuilt-v2.2.0` bundle yet;
+  `build-litert-wasm.yml` must be dispatched for the v2.2.0 tag and the
+  `WASM32_EMSCRIPTEN_*` constants updated from the published release before
+  this ships. Until then the wasm bindings are 4-arg while the pinned archive
+  is 3-arg.
+
+
 ## [0.3.0] — WASM (browser + server) support for `litert-sys` / `litert`
 
 First-class `wasm32-unknown-emscripten` target for the base TFLite inference

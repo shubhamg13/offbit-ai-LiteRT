@@ -9,7 +9,7 @@
 [![docs.rs](https://img.shields.io/docsrs/litertlm?label=docs.rs%2Flitertlm)](https://docs.rs/litertlm)
 [![MSRV](https://img.shields.io/badge/rustc-1.75%2B-blue.svg)](https://releases.rs/docs/1.75.0/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-informational.svg)](LICENSE)
-[![LiteRT](https://img.shields.io/badge/LiteRT-2.1.4-informational.svg)](https://github.com/google-ai-edge/LiteRT)
+[![LiteRT](https://img.shields.io/badge/LiteRT-2.2.0-informational.svg)](https://github.com/google-ai-edge/LiteRT)
 
 Safe, zero-friction Rust bindings for [Google LiteRT] 2.x — on-device ML
 inference and LLM text generation. Add a crate to `Cargo.toml` and
@@ -296,9 +296,9 @@ On the first `cargo build` for a given target, `litert-sys/build.rs` emits a
 one-time warning while it fetches the pinned prebuilt libraries:
 
 ```
-warning: litert-sys: downloading 4 file(s) of LiteRT prebuilt v0.10.2
+warning: litert-sys: downloading 4 file(s) of LiteRT prebuilt v0.17.0
          for target `macos_arm64` into
-         /Users/you/Library/Caches/litert-sys/v0.10.2/aarch64-apple-darwin
+         /Users/you/Library/Caches/litert-sys/v0.17.0/aarch64-apple-darwin
          (first build only)
 ```
 
@@ -328,7 +328,7 @@ model loading, graph compilation, kernel execution, GPU/NPU delegation — is
 Google's [LiteRT] and [LiteRT-LM]:
 
 * **LiteRT** (Apache-2.0, © 2024–2026 Google LLC) — C API headers vendored
-  under `third_party/litert-v2.1.4/`, source:
+  under `third_party/litert-v2.2.0/`, source:
   <https://github.com/google-ai-edge/LiteRT>.
 * **LiteRT-LM** (Apache-2.0, © 2024–2026 Google LLC) — source of the
   prebuilt `libLiteRt.*` + accelerator plugins we download:
@@ -338,7 +338,7 @@ Google's [LiteRT] and [LiteRT-LM]:
   itself is built on.
 
 See [NOTICE](NOTICE) for the full attribution and
-[third_party/litert-v2.1.4/LICENSE](third_party/litert-v2.1.4/LICENSE) for
+[third_party/litert-v2.2.0/LICENSE](third_party/litert-v2.2.0/LICENSE) for
 the upstream LiteRT license text.
 
 [LiteRT]: https://github.com/google-ai-edge/LiteRT

@@ -24,11 +24,11 @@ use std::{
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
-const LITERT_LM_TAG: &str = "v0.10.2";
-const LITERT_MAVEN_VERSION: &str = "2.1.4";
+const LITERT_LM_TAG: &str = "v0.17.0";
+const LITERT_MAVEN_VERSION: &str = "2.2.0";
 
 #[cfg(feature = "generate-bindings")]
-const LITERT_HEADERS_VERSION: &str = "2.1.4";
+const LITERT_HEADERS_VERSION: &str = "2.2.0";
 
 /// A single prebuilt file pinned by SHA-256 (which is the Git LFS OID, so the
 /// same string serves as both the content address for the download request
@@ -70,8 +70,8 @@ struct TargetSpec {
 
 // Pinned Android AAR — same file for every Android target, sourced from
 // Google Maven. `com.google.ai.edge.litert:litert:<LITERT_MAVEN_VERSION>`.
-const ANDROID_AAR_SHA256: &str = "29ce4fdc362306f3793b910d759d93867a5c2204bb890ac5f9410c62c3f7482a";
-const ANDROID_AAR_SIZE: u64 = 13_844_131;
+const ANDROID_AAR_SHA256: &str = "624518d72f8a249711a19e9901f480e74f823ca7818260a739cb2c023024807c";
+const ANDROID_AAR_SIZE: u64 = 11_761_541;
 fn android_aar_url() -> String {
     format!(
         "https://dl.google.com/android/maven2/com/google/ai/edge/litert/litert/\
@@ -83,83 +83,109 @@ const ANDROID_OUTPUTS: &[&str] = &["libLiteRt.so", "libLiteRtClGlAccelerator.so"
 const MACOS_ARM64: &[Prebuilt] = &[
     Prebuilt {
         name: "libLiteRt.dylib",
-        oid: "382effa82b9830d96f73f9ed545462c9eb64786b5f63d8f3c5affb3a16fd28eb",
-        size: 10_535_776,
+        oid: "1a7f67833e7f7bff8ac8faac005d38ca51bac0e1c8c2ceb5e19bed83143d2082",
+        size: 11_407_536,
     },
     Prebuilt {
         name: "libLiteRtMetalAccelerator.dylib",
-        oid: "4ff8b68149ac5bc665ae3a1e11473c3a1deebb7af53c657326810867ea937343",
-        size: 10_005_920,
+        oid: "ac988ae23d4c185f30e5f080f2a317964ec2869783929d04a9f36f1b488189ff",
+        size: 11_486_320,
     },
     Prebuilt {
         name: "libLiteRtWebGpuAccelerator.dylib",
-        oid: "dc3822d1004d502d5e79e8158eb7cf8c919011202fea3f156e94f86ad14f4f71",
-        size: 24_015_584,
+        oid: "895d489f75526948b9a12a4dd223884a7ffa00ec7836569557a829f3332c0bef",
+        size: 11_672_880,
     },
     Prebuilt {
         name: "libLiteRtTopKWebGpuSampler.dylib",
-        oid: "618efc1173194ca6658704a40890e98818cde4320b2e0f9013e959bd2c0268da",
-        size: 22_264_864,
+        oid: "630ed537058179e463a41df8854cebfd9abadd44777e36a24cad8a3ff504098e",
+        size: 9_539_120,
     },
     // Required by litert-lm-sys's libLiteRtLmC at runtime.
     Prebuilt {
         name: "libGemmaModelConstraintProvider.dylib",
-        oid: "b584d9041af42fec0879593d747ba1bda139c25398f41c5c1c2c8dfa6c457008",
-        size: 9_214_976,
+        oid: "8f89bc92ade1e0e164af9f047060f5e37a63cf214efc09cfb9ed59d0cca1a5ff",
+        size: 9_389_088,
+    },
+    // Hard `NEEDED`/load-command dependency of the WebGPU accelerator and
+    // sampler libraries (verified with readelf / otool / PE imports); loading
+    // those without it fails.
+    Prebuilt {
+        name: "libwebgpu_dawn.dylib",
+        oid: "f54d47b231e955e43bb0789243692421504e0c904de21e2297eeee55df7d754b",
+        size: 15_159_472,
     },
 ];
 
 const LINUX_X86_64: &[Prebuilt] = &[
     Prebuilt {
         name: "libLiteRt.so",
-        oid: "e9844d634dbb69dbeb0bc51a71f7035bb7ba523e876384ff58192955b1da63e4",
-        size: 10_050_528,
+        oid: "081d417b9653a883b6d6124d9fa81382a0149ed810d7b549ce1dcdfb1ab45ec4",
+        size: 10_946_544,
     },
     Prebuilt {
         name: "libLiteRtWebGpuAccelerator.so",
-        oid: "9523c6fd38f661599b904908f87d22448c2ff2c8da54291782e0c23fcf988863",
-        size: 17_606_760,
+        oid: "39e4a3c39de42324a945a2d587ac75335ddf432c68401b3b5d601dd765e2f9b6",
+        size: 8_967_856,
     },
     Prebuilt {
         name: "libLiteRtTopKWebGpuSampler.so",
-        oid: "f44b2eaded0a5b2e015c88a4eb6af960811c5a5df140f9101f84d845e8aff0ca",
-        size: 4_210_232,
+        oid: "b2a9d6665a1b549f5a22c0c1c53ecb5fdb9f90a445d2280d55e4c63ecb99c26c",
+        size: 14_460_056,
+    },
+    // See libwebgpu_dawn.dylib above — same hard runtime dependency.
+    Prebuilt {
+        name: "libwebgpu_dawn.so",
+        oid: "7a597fd09d62216c584fab7fc74a06da11fa7cfd33bf09c31d84ecb4eff0a648",
+        size: 13_732_336,
     },
 ];
 
 const LINUX_ARM64: &[Prebuilt] = &[
     Prebuilt {
         name: "libLiteRt.so",
-        oid: "f541933152a7eb651707e610e4e173dba7ee484aee7f1b6f83fb32384a8a5398",
-        size: 8_172_696,
+        oid: "a8d2d07f0e3963690c71ce78e770e02c88699409354e1a766bc490f16a009b7d",
+        size: 8_815_936,
     },
     Prebuilt {
         name: "libLiteRtWebGpuAccelerator.so",
-        oid: "e09dd392f0f21bd64437f36ca9a28e109cff7b662bafd66ef5b5f2957023d433",
-        size: 15_813_112,
+        oid: "d8d2e41ee7ed2d74338bc814766cf484d006eadaee376a4d1589c63aeef14384",
+        size: 7_738_312,
     },
     Prebuilt {
         name: "libLiteRtTopKWebGpuSampler.so",
-        oid: "90328888d96b4bfedb5ad30a7eecd8b213d25a6a17af44774f213612f47f1a84",
-        size: 3_788_400,
+        oid: "edb36926390c19d8c89a1e5b3f06101197b93359a369afa7d402c153ffcd09ce",
+        size: 12_988_312,
+    },
+    // See libwebgpu_dawn.dylib above — same hard runtime dependency.
+    Prebuilt {
+        name: "libwebgpu_dawn.so",
+        oid: "85f3344523eaa836b7cfe456b4641fe12d4cfbb914c72f51760aa83017da2642",
+        size: 13_344_992,
     },
 ];
 
 const WINDOWS_X86_64: &[Prebuilt] = &[
     Prebuilt {
         name: "libLiteRt.dll",
-        oid: "d87f00b4161046f23c911fe8f64224bcbdff8399be792bcb62bf95b52cbbccc5",
-        size: 11_013_632,
+        oid: "f62c81c2a3818595714ae2c9b15eaacf673a90b02034471c30a87eb64d995d42",
+        size: 12_114_432,
     },
     Prebuilt {
         name: "libLiteRtWebGpuAccelerator.dll",
-        oid: "69a8b4671fe5f9f16054b5be211c484d954b95fbf459359d445319c6039b176b",
-        size: 21_816_320,
+        oid: "8a2c4d5700ac34cfbef96548e1096a4532e9bbe20ee827e80a38439766c81644",
+        size: 12_304_384,
     },
     Prebuilt {
         name: "libLiteRtTopKWebGpuSampler.dll",
-        oid: "31cfc379259d553ea4eeb7f4f949f116629b4882feafce343de57d2e837b3903",
-        size: 16_971_776,
+        oid: "5ddbb93b4192efd5aafed2ec23d98091b12e467ea0c0daa65d1abac5f2529532",
+        size: 9_729_024,
+    },
+    // See libwebgpu_dawn.dylib above — same hard runtime dependency.
+    Prebuilt {
+        name: "libwebgpu_dawn.dll",
+        oid: "4f98d05a333cf980776ae5382c39ce19638cf71d1fd60133d1c849b55551895e",
+        size: 11_924_992,
     },
 ];
 
@@ -167,6 +193,14 @@ const WINDOWS_X86_64: &[Prebuilt] = &[
 // (CMake+emscripten build of LiteRT v2.1.4 + our `wasm-patches/`). Contains
 // ~88 `.a` files (litert C/C++ API, runtime, TFLite, XNNPACK, abseil,
 // flatbuffers, gemmlowp, cpuinfo, pthreadpool — total ~15 MB extracted).
+//
+// BLOCKER: this bundle is still LiteRT v2.1.4, i.e. its 3-arg
+// `LiteRtCreateModelFrom*`. The committed bindings for this target are
+// generated by the same workflow, so they stay 3-arg and consistent with the
+// archive — but the *wrapper* (litert/src/model.rs) now calls the 4-arg API.
+// The wasm target therefore does not build until `build-litert-wasm.yml` is
+// dispatched for LiteRT v2.2.0 (it publishes a `wasm-prebuilt-v2.2.0` release)
+// and this pin plus `wasm32-unknown-emscripten.rs` are updated together.
 //
 // At link time we glob the cache dir and emit `-l static=<name>` for every
 // `lib<name>.a` we find — the upstream build's archive surface evolves over

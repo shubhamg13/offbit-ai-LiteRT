@@ -42,14 +42,18 @@ pub enum LogSeverity {
 impl LogSeverity {
     #[cfg(not(target_arch = "wasm32"))]
     fn to_raw(self) -> sys::LiteRtLogSeverity {
-        match self {
+        // Since LiteRT 2.2.0 the header declares `LiteRtLogSeverity` as a
+        // plain `int8_t` typedef with the values in an unnamed enum, so the
+        // bindgen constants are `c_int` and need narrowing.
+        let raw = match self {
             Self::Debug => sys::kLiteRtLogSeverityDebug,
             Self::Verbose => sys::kLiteRtLogSeverityVerbose,
             Self::Info => sys::kLiteRtLogSeverityInfo,
             Self::Warning => sys::kLiteRtLogSeverityWarning,
             Self::Error => sys::kLiteRtLogSeverityError,
             Self::Silent => sys::kLiteRtLogSeveritySilent,
-        }
+        };
+        raw as sys::LiteRtLogSeverity
     }
 }
 
